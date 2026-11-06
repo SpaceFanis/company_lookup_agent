@@ -73,6 +73,8 @@ Tool backend is swappable: `run_agent(url, tools=SDKTools() | MCPTools())` — s
 ### CompanyProfile schema
 name, one_liner, description, industry, products/services, target customers, business model/pricing, headquarters, founded, team size (estimate), key people, funding/news highlights, competitors, social links, `sources: list[url]`, `confidence_notes`.
 
+As built (milestone 4): `founded_year` (int), `hiring_signals`, `recent_news`, `key_people` as nested `Person{name, role}`. The tool's parameters are the profile fields directly. **No flattening was needed:** Gemini accepted the Pydantic schema with `$defs`/`$ref` and `anyOf` null as is (tested live on 2026-11-06).
+
 ## Process
 After **each milestone**: stop, explain what was built and why (and what to observe when running it), then wait for your go-ahead before starting the next one.
 
