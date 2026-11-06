@@ -1,0 +1,27 @@
+[project]
+name = "company-agent"
+version = "0.1.0"
+description = "Autonomous company research agent (Gemini + Firecrawl + Streamlit)"
+readme = "README.md"
+authors = [
+    { name = "Fanis", email = "fpapaspyrou2008@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "firecrawl-py>=4.55.0",
+    "google-genai>=3.0.0",
+    "mcp>=2.3.0",
+    "pydantic>=2.14.3",
+    "python-dotenv>=1.2.4",
+    "streamlit>=1.67.0",
+]
+
+
+[build-system]
+requires = ["uv_build>=0.13.7,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

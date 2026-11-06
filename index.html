@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --text: #1f1f1d;
+    --muted: #9a968f;
+    --line: #ebe7e0;
+    --accent: #6b7fd7;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151514;
+      --text: #ecebe7;
+      --muted: #77746e;
+      --line: #262624;
+      --accent: #8c9cf0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 12vh 24px 80px;
+  }
+  header { margin-bottom: 40px; }
+  h1 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+  }
+  .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  form { margin-bottom: 8px; }
+  #new {
+    width: 100%;
+    padding: 14px 0;
+    font: inherit;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    outline: none;
+    transition: border-color .2s;
+  }
+  #new::placeholder { color: var(--muted); }
+  #new:focus { border-color: var(--accent); }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+    animation: in .22s ease;
+  }
+  @keyframes in { from { opacity: 0; transform: translateY(-4px); } }
+
+  .check {
+    flex: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--muted);
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: background .18s, border-color .18s;
+  }
+  .check:hover { border-color: var(--accent); }
+  .check svg {
+    width: 11px; height: 11px;
+    stroke: var(--bg); stroke-width: 2.5; fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0; transform: scale(.6);
+    transition: opacity .18s, transform .18s;
+  }
+  li.done .check { background: var(--accent); border-color: var(--accent); }
+  li.done .check svg { opacity: 1; transform: none; }
+
+  .label {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+    transition: color .2s;
+  }
+  li.done .label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
+  .edit {
+    flex: 1; font: inherit; color: var(--text);
+    background: transparent; border: 0; outline: 0;
+    border-bottom: 1px solid var(--accent); padding: 0;
+  }
+
+  .del {
+    flex: none;
+    background: none; border: 0; padding: 4px 6px;
+    color: var(--muted); font-size: 20px; line-height: 1;
+    cursor: pointer; opacity: 0;
+    transition: opacity .15s, color .15s;
+  }
+  li:hover .del, .del:focus-visible { opacity: 1; }
+  .del:hover { color: var(--text); }
+  @media (hover: none) { .del { opacity: .6; } }
+
+  .empty { color: var(--muted); text-align: center; padding: 48px 0; font-size: 14px; }
+
+  footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 20px; font-size: 13px; color: var(--muted);
+  }
+  footer[hidden] { display: none; }
+  .filters { display: flex; gap: 14px; }
+  footer button {
+    font: inherit; color: var(--muted);
+    background: none; border: 0; padding: 2px 0; cursor: pointer;
+    transition: color .15s;
+  }
+  footer button:hover { color: var(--text); }
+  footer button[aria-pressed="true"] { color: var(--text); }
+  #clear[hidden] { display: none; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  #new:focus-visible, .edit:focus-visible { outline: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1 id="title">Today</h1>
+    <div class="sub" id="sub"></div>
+  </header>
+
+  <form id="form" autocomplete="off">
+    <label for="new" hidden>New task</label>
+    <input id="new" placeholder="Add a task…" maxlength="200">
+  </form>
+
+  <ul id="list"></ul>
+  <div class="empty" id="empty" hidden>Nothing here. Enjoy the quiet.</div>
+
+  <footer id="foot" hidden>
+    <span id="count" aria-live="polite"></span>
+    <div class="filters" role="group" aria-label="Filter">
+      <button data-f="all" aria-pressed="true">All</button>
+      <button data-f="active" aria-pressed="false">Active</button>
+      <button data-f="done" aria-pressed="false">Done</button>
+    </div>
+    <button id="clear" hidden>Clear done</button>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const KEY = "todo.v1";
+  let tasks = [], filter = "all";
+
+  const $ = id => document.getElementById(id);
+  const list = $("list"), input = $("new");
+
+  const load = () => { try { tasks = JSON.parse(localStorage.getItem(KEY)) || []; } catch { tasks = []; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch {} };
+
+  const now = new Date();
+  const h = now.getHours();
+  $("title").textContent = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  $("sub").textContent = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+  const CHECK = '<svg viewBox="0 0 12 12"><path d="M2 6.5l2.5 2.5L10 3.5"/></svg>';
+
+  function render() {
+    const shown = tasks.filter(t => filter === "all" || (filter === "done") === t.done);
+    list.innerHTML = "";
+    for (const t of shown) {
+      const li = document.createElement("li");
+      li.dataset.id = t.id;
+      if (t.done) li.className = "done";
+      li.innerHTML = `<button class="check" aria-label="Toggle done">${CHECK}</button>
+        <span class="label"></span>
+        <button class="del" aria-label="Delete task">×</button>`;
+      li.querySelector(".label").textContent = t.text;
+      list.appendChild(li);
+    }
+    const left = tasks.filter(t => !t.done).length;
+    $("count").textContent = `${left} left`;
+    $("clear").hidden = left === tasks.length;
+    $("foot").hidden = tasks.length === 0;
+    $("empty").hidden = shown.length > 0;
+    $("empty").textContent = tasks.length === 0 ? "Nothing here. Enjoy the quiet." : "No tasks in this view.";
+    document.querySelectorAll("[data-f]").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
+  }
+
+  const idOf = el => el.closest("li").dataset.id;
+
+  $("form").addEventListener("submit", e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    tasks.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text, done: false });
+    input.value = "";
+    save(); render();
+  });
+
+  list.addEventListener("click", e => {
+    if (e.target.closest(".check")) {
+      const t = tasks.find(t => t.id === idOf(e.target));
+      t.done = !t.done; save(); render();
+    } else if (e.target.closest(".del")) {
+      tasks = tasks.filter(t => t.id !== idOf(e.target)); save(); render();
+    }
+  });
+
+  list.addEventListener("dblclick", e => {
+    const label = e.target.closest(".label");
+    if (!label) return;
+    const t = tasks.find(t => t.id === idOf(label));
+    const field = document.createElement("input");
+    field.className = "edit"; field.value = t.text; field.maxLength = 200;
+    label.replaceWith(field); field.focus(); field.select();
+    let finished = false;
+    const finish = commit => {
+      if (finished) return; finished = true;
+      const v = field.value.trim();
+      if (commit && v) { t.text = v; save(); }
+      render();
+    };
+    field.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") finish(true);
+      if (ev.key === "Escape") finish(false);
+    });
+    field.addEventListener("blur", () => finish(true));
+  });
+
+  document.querySelectorAll("[data-f]").forEach(b =>
+    b.addEventListener("click", () => { filter = b.dataset.f; render(); }));
+
+  $("clear").addEventListener("click", () => { tasks = tasks.filter(t => !t.done); save(); render(); });
+
+  load(); render();
+})();
+</script>
+</body>
+</html>
