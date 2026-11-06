@@ -11,8 +11,8 @@ URL = "https://acme.test"
 
 # --- Fakes -------------------------------------------------------------------
 
-def call(name: str, **args) -> types.Part:
-    return types.Part(function_call=types.FunctionCall(name=name, args=args))
+def call(tool: str, **args) -> types.Part:
+    return types.Part(function_call=types.FunctionCall(name=tool, args=args))
 
 
 def text(t: str) -> types.Part:
@@ -29,8 +29,14 @@ def reply(*parts: types.Part, tokens=(10, 5, 2)) -> types.GenerateContentRespons
     )
 
 
-def submit(md="# Acme\nMakes anvils.", sources=(URL,)) -> types.Part:
-    return call("submit_company_profile", profile_markdown=md, sources=list(sources))
+VALID_PROFILE = {
+    "name": "Acme", "website": URL, "one_liner": "Makes anvils.",
+    "description": "Acme makes anvils.", "sources": [URL],
+}
+
+
+def submit(**overrides) -> types.Part:
+    return call("submit_company_profile", **{**VALID_PROFILE, **overrides})
 
 
 class FakeModels:
@@ -96,7 +102,7 @@ def test_calls_tools_then_finishes_on_submit():
     ])
     result = final_of(events)
     assert result["error"] is None and not result["partial"]
-    assert result["profile"]["profile_markdown"].startswith("# Acme")
+    assert result["profile"].name == "Acme"
     assert tools.calls == [("map_site", {"url": URL})]
 
 
@@ -186,11 +192,24 @@ def test_page_budget_blocks_extra_scrapes():
 
 def test_invalid_submit_is_rejected_then_retried():
     events, client, _ = run([
-        reply(submit(md="   ")),
+        reply(submit(founded_year=3000, sources=[])),
+        reply(submit(founded_year=1949)),
+    ])
+    error = function_responses(client.models.requests[1]["contents"][-1])[0].response["error"]
+    assert "Profile rejected" in error
+    assert "founded_year: must be between 1800" in error
+    assert "sources: cite at least one source URL" in error
+    assert final_of(events)["profile"].founded_year == 1949
+
+
+def test_submit_with_missing_required_field_is_rejected():
+    bad = {k: v for k, v in VALID_PROFILE.items() if k != "one_liner"}
+    events, client, _ = run([
+        reply(call("submit_company_profile", **bad)),
         reply(submit()),
     ])
-    fr = function_responses(client.models.requests[1]["contents"][-1])[0]
-    assert "Profile rejected" in fr.response["error"]
+    error = function_responses(client.models.requests[1]["contents"][-1])[0].response["error"]
+    assert "one_liner: Field required" in error
     assert final_of(events)["profile"] is not None
 
 

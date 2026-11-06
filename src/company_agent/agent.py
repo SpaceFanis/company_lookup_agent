@@ -20,6 +20,7 @@ from google import genai
 from google.genai import errors, types
 
 from company_agent import config, prompts
+from company_agent.schema import ProfileSubmitter
 from company_agent.tools_sdk import SDKTools, normalize_url
 
 RETRY_CODES = {429, 500, 503}   # rate limit / transient server errors
@@ -42,30 +43,6 @@ class Submitter(Protocol):
     def validate(self, args: dict[str, Any]) -> tuple[Any, str | None]:
         """Return (profile, None) if valid, or (None, error message)."""
         ...
-
-
-class SimpleSubmitter:
-    """Milestone 3 terminal tool: a markdown profile + sources.
-    Milestone 4 replaces it with the full CompanyProfile schema."""
-
-    declaration = types.FunctionDeclaration(
-        name="submit_company_profile",
-        description="Finish the research and submit the company profile.",
-        parameters_json_schema={
-            "type": "object",
-            "properties": {
-                "profile_markdown": {"type": "string", "description": "The company profile in markdown"},
-                "sources": {"type": "array", "items": {"type": "string"}, "description": "Source URLs used"},
-            },
-            "required": ["profile_markdown", "sources"],
-        },
-    )
-
-    def validate(self, args: dict[str, Any]) -> tuple[Any, str | None]:
-        text = (args.get("profile_markdown") or "").strip()
-        if not text:
-            return None, "profile_markdown is empty."
-        return {"profile_markdown": text, "sources": list(args.get("sources") or [])}, None
 
 
 # --- Events and usage --------------------------------------------------------
@@ -112,7 +89,7 @@ def run_agent(
     sleep=time.sleep,
 ) -> Iterator[Event]:
     tools = tools or SDKTools()
-    submitter = submitter or SimpleSubmitter()
+    submitter = submitter or ProfileSubmitter()
     client = client or genai.Client(api_key=config.GEMINI_API_KEY)
     model = model or config.GEMINI_MODEL
     url = normalize_url(url)
@@ -266,8 +243,7 @@ def main() -> None:
             d = ev.data
             print("\n" + "=" * 60)
             if d["profile"]:
-                print(d["profile"]["profile_markdown"])
-                print("\nSources:", *d["profile"]["sources"], sep="\n  ")
+                print(d["profile"].to_markdown())
             else:
                 print("PARTIAL RESULT -", d["error"])
                 print(d["last_text"] or "(no text)")
