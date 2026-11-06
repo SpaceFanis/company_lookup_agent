@@ -10,7 +10,7 @@ The app: paste a company URL → an agent autonomously decides which pages to re
 ## Stack
 | Piece | Choice | Why |
 |---|---|---|
-| LLM | Gemini (free tier, Google AI Studio) via `google-genai` SDK, a current Flash model (e.g. `gemini-2.5-flash` or newer — confirm in AI Studio at build time) | Free, fast, good function calling |
+| LLM | Gemini (free tier, Google AI Studio) via `google-genai` SDK, `gemini-3.5-flash` (2.5 is retired for new keys; 3.7/3.8 Flash returned 503 "high demand" on 2026-11-06) | Free, fast, good function calling |
 | Agent loop | Hand-written function-calling loop | Learn the internals |
 | Web data | Firecrawl — Python SDK first, then Firecrawl MCP server | Learn tool-calling, then MCP |
 | UI | Streamlit with live step log (`st.status`) | Quick, modern-enough, good for demos |
