@@ -13,6 +13,7 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 MAX_STEPS = 8            # max model turns per research run
 MAX_PAGES = 5            # max page scrapes per run (Firecrawl credits)
 MAX_PAGE_CHARS = 5_000   # truncate each scraped page to keep context small
+MAX_SNIPPET_CHARS = 500  # some search "snippets" are whole pages (20k+ chars)
 
 
 def missing_keys() -> list[str]:
