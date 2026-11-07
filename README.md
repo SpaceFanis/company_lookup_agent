@@ -13,6 +13,7 @@ Paste a company URL; an agent decides which pages to read and what to search, th
 ## Run
 - Hello Gemini (one function-call round trip): `uv run python examples/hello_gemini.py`
 - Research agent (CLI): `uv run python -m company_agent.agent https://example.com`
+- Web UI: `uv run streamlit run app.py`, then open http://localhost:8501
 - Tests (no network): `uv run pytest`
 
 ## Free-tier limits
