@@ -75,14 +75,20 @@ def render_event(ev: Event) -> None:
         else:
             st.markdown(f"**Step {ev.step}** · 🔧 `{d['tool']}({args})`")
     elif ev.type == "tool_result":
+        preview = one_line(d["preview"], 300)
         if d["error"]:
-            st.markdown(f"&nbsp;&nbsp;&nbsp;⚠️ {d['preview'][:300]}")
+            st.markdown(f"&nbsp;&nbsp;&nbsp;⚠️ {preview}")
         else:
-            st.caption(f"↳ {d['preview'][:300]}")
+            st.caption(f"↳ {preview}")
     elif ev.type == "retry":
         st.caption(f"⏳ Gemini returned HTTP {d['code']}; retrying in {d['wait_s']}s")
     elif ev.type == "nudge":
-        st.caption(f"💬 No tool call; nudged the model. It said: {d['model_text'][:200]}")
+        st.caption(f"💬 No tool call; nudged the model. It said: {one_line(d['model_text'], 200)}")
+
+
+def one_line(text: str, limit: int) -> str:
+    """Flatten scraped markdown to one line so headings or lists in a preview don't render as big blocks."""
+    return " ".join(text.split())[:limit]
 
 
 def bullet_card(title: str, items: list[str]) -> None:
